@@ -16,3 +16,18 @@ class Parser(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.inputStream.close()
+
+    def hasMoreCommands(self):
+        return False
+
+    def advance(self):
+        pass
+
+    def commandType(self):
+        return None
+
+    def arg1(self):
+        return None
+
+    def arg2(self):
+        return None

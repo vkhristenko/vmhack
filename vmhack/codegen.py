@@ -11,3 +11,9 @@ class CodeGen(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.outputFile.close()
+
+    def generateArithmetic(self, acType):
+        pass
+
+    def generatePushPop(self, memcmd, segment, address):
+        pass
