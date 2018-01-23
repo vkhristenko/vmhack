@@ -29,6 +29,8 @@ def translate(inputFile):
                 else:
                     raise NotImplementedError("Unsupported command type: %d" % cType)
 
+    logger.info("Finished compiling hack file: %s" % inputFile)
+
 if __name__ == "__main__":
     #
     # get the option parser set up

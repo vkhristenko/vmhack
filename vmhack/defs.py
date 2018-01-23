@@ -25,3 +25,8 @@ THIS = 3
 THAT = 4
 STACK_BASE = 256
 HEAP_BASE = 2048
+
+#
+# Regular Expressions to specify the Hack VM Language
+#
+RE_PUSHORPOP = "(push|pop) +(constant|local|argument|static|this|that|pointer|temp) +([1-9][0-9]*)"
