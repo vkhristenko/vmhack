@@ -22,6 +22,7 @@ def translate(inputFile):
 
                 # dispatch depending on the comamnd that we are dealing with
                 cType = p.commandType()
+                cg.inputLine = p.inputLine # ...
                 if cType == defs.C_ARITHMETIC:
                     cg.generateArithmetic(p.arg1())
                 elif cType == defs.C_PUSH or cType == defs.C_POP:

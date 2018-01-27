@@ -37,7 +37,6 @@ class Parser(object):
                 self.inputLine = line
                 return True
 
-
     def advance(self):
         """
         pass the input line
@@ -71,7 +70,16 @@ class Parser(object):
         return self.ctype
 
     def arg1(self):
-        return None
+        if self.ctype == defs.C_PUSH or self.ctype == defs.C_POP:
+            return self.segment
+        elif self.ctype == defs.C_ARITHMETIC:
+            return self.action
+        else:
+            raise NotImplementedError("Parser::arg1 unknown ctype: " + str(self.ctype))
+
 
     def arg2(self):
-        return None
+        if self.ctype == defs.C_PUSH or self.ctype == defs.C_POP:
+            return self.value
+        else:
+            raise NotImplementedError("Parser::arg2 unknown ctype:" + str(self.ctype))
