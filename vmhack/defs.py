@@ -29,4 +29,8 @@ HEAP_BASE = 2048
 #
 # Regular Expressions to specify the Hack VM Language
 #
-RE_PUSHORPOP = "(push|pop) +(constant|local|argument|static|this|that|pointer|temp) +([1-9][0-9]*)"
+RE_INLINECOMMENT = " +//.*"
+RE_LINECOMMENT = "^" + RE_INLINECOMMENT + "$"
+RE_EMPTYLINE = "^ *$"
+RE_PUSHORPOP = "^(push|pop) +(constant|local|argument|static|this|that|pointer|temp) +([1-9][0-9]*)( *|%s)$" % RE_INLINECOMMENT
+RE_ARITHMETIC = "^(add|sub|neg|eq|gt|lt|and|or|not)( *|%s)$" % RE_INLINECOMMENT
