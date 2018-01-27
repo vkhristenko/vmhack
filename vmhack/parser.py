@@ -51,14 +51,24 @@ class Parser(object):
         m_arithmetic = re.match(defs.RE_ARITHMETIC, self.inputLine)
 
         if m_pushpop is not None:
-            pass
+            self.action = m_pushpop.group(1)
+            self.segment = m_pushpop.group(2)
+            self.value = m_pushpop.group(3)
+            if self.action == "push":
+                self.ctype = defs.C_PUSH
+            elif self.action == "pop":
+                self.ctype = defs.C_POP
+            else:
+                raise NotImplementedError("Matched command (%s) is neither push nor pop" %
+                    self.action)
         elif m_arithmetic is not None:
-            pass
+            self.action = m_arithmetic.group(1)
+            self.ctype = defs.C_ARITHMETIC
         else:
             raise NotImplementedError("Unsupported VM command type: %s" % self.inputLine)
 
     def commandType(self):
-        return None
+        return self.ctype
 
     def arg1(self):
         return None
