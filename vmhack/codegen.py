@@ -121,3 +121,32 @@ class CodeGen(object):
 
     def generatePushPop(self, memcmd, segment, address):
         pass
+
+    def vm_push(self, segment, address):
+        # less instructions for the constant memory segment
+        if segment == "constant":
+            return \
+                    """A={value}
+                    D=A
+                    @SP
+                    A=M
+                    M=D
+                    @SP
+                    M=M+1
+                    """.format(value = address)
+        else:
+            return \
+                    """A={value}
+                    D=A
+                    @{segment}
+                    A=M+D
+                    D=M
+                    @SP
+                    A=M
+                    M=D
+                    @SP
+                    M=M+1
+                    """.format(value = address, segment = segment2id[segment])
+
+    def vm_pop(self, segment, address):
+        pass
