@@ -14,7 +14,8 @@ class Parser(object):
         self.inputFile = inputFile
 
     def __enter__(self):
-        self.inputStream = open(inputFile, "r")
+        self.inputStream = open(self.inputFile, "r")
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.inputStream.close()
@@ -26,7 +27,13 @@ class Parser(object):
         logging.debug("hasMoreCommands start")
         while True:
             line = self.inputStream.readline()
-            logging.debug("line = \"%s\"" % line)
+            if line == "": return False
+
+            # to simplify things a bit -> right strip the line content
+            line = line.rstrip()
+            logging.debug("next input line = \"%s\"" % line)
+            if line == "":
+                continue
             
             # check if this is a comment or or just an empty string of spaces
             m_comment = re.match(defs.RE_LINECOMMENT, line)

@@ -12,17 +12,20 @@ def translate(inputFile):
     """
     Main Driver: translate the Hack VM code into the Hack Assembly Instructions
     """
-    logger.info("Compiling hack vm file: %s" % inputFile)
+    logging.info("Compiling hack vm file: %s" % inputFile)
     with Parser(inputFile) as p:
         outputFile = inputFile.replace(".vm", ".asm")
         with CodeGen(outputFile) as cg:
             while p.hasMoreCommands():
                 # fetch the command
                 p.advance()
+                logging.debug("next vm command: %s" % p.inputLine)
 
                 # dispatch depending on the comamnd that we are dealing with
                 cType = p.commandType()
                 cg.inputLine = p.inputLine # ...
+                # generate a line that contains the cmd that is going to be translated
+                cg.genCommentLine()
                 if cType == defs.C_ARITHMETIC:
                     cg.generateArithmetic(p.arg1())
                 elif cType == defs.C_PUSH or cType == defs.C_POP:
@@ -30,7 +33,7 @@ def translate(inputFile):
                 else:
                     raise NotImplementedError("Unsupported command type: %d" % cType)
 
-    logger.info("Finished compiling hack file: %s" % inputFile)
+    logging.info("Finished compiling hack file: %s" % inputFile)
 
 if __name__ == "__main__":
     #
