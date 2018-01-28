@@ -18,7 +18,7 @@ class CodeGen(object):
         self.outputFile = outputFile
 
     def __enter__(self):
-        self.outputStream = open(self.inputFile, "w")
+        self.outputStream = open(self.outputFile, "w")
         self.cmdindex = 0
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -134,7 +134,7 @@ class CodeGen(object):
                     @SP
                     M=M+1
                     """.format(value = address)
-        else:
+        elif segment in ["local", "argument", "this", "that"]:
             return \
                     """A={value}
                     D=A
@@ -146,7 +146,57 @@ class CodeGen(object):
                     M=D
                     @SP
                     M=M+1
-                    """.format(value = address, segment = segment2id[segment])
+                    """.format(value = address, segment = defs.segment2id[segment])
+        elif segment == "static":
+            return \
+                    """@{filename}.{index}
+                    D=M
+                    @SP
+                    A=M
+                    M=D
+                    @SP
+                    M=M+1
+                    """.format(filename=self.outputFile.rstrip(".asm"),
+                               index = address)
+        elif segment == "temp":
+            return \
+                    """D={index}
+                    @{temp}
+                    A=D+A
+                    D=M
+                    @SP
+                    A=M
+                    M=D
+                    @SP
+                    M=M+1
+                    """.format(index=address, temp=defs.TEMP)
+        elif segment == "pointer":
+            if address == 0:
+                return \
+                        """@{this}
+                        D=M
+                        @SP
+                        A=M
+                        M=D
+                        @SP
+                        M=M+1
+                        """.format(this=defs.THIS)
+            elif address == 1:
+                return \
+                        """@{that}
+                        D=M
+                        @SP
+                        A=M
+                        M=D
+                        @SP
+                        M=M+1
+                        """.format(that = defs.THAT)
+            else:
+                raise NotImplementedError("unknown address for the pointer memory segment %d" %
+                        address)
+        else:
+            raise NotImpelementedError("unknown memory segement: (%s, %d)" % (
+                segment, address))
 
     def vm_pop(self, segment, address):
         pass

@@ -23,8 +23,13 @@ LCL = 1
 ARG = 2
 THIS = 3
 THAT = 4
+POINTER = 3
+TEMP = 5
 STACK_BASE = 256
 HEAP_BASE = 2048
+
+segment2id = {"constant" : None, "local" : LCL, "argument" : ARG,
+        "pointer" : POINTER, "temp" : TEMP, "this" : THIS, "that" : THAT}
 
 #
 # Regular Expressions to specify the Hack VM Language
