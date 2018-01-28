@@ -29,7 +29,7 @@ def translate(inputFile):
                 if cType == defs.C_ARITHMETIC:
                     cg.generateArithmetic(p.arg1())
                 elif cType == defs.C_PUSH or cType == defs.C_POP:
-                    cg.generatePushPop(cType, p.arg1(), p.arg2())
+                    cg.generatePushPop(cType, p.arg1(), int(p.arg2()))
                 else:
                     raise NotImplementedError("Unsupported command type: %d" % cType)
 
@@ -43,12 +43,19 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("--inputFile", dest="inputFile", default=None,
         help="File to translate")
+    parser.add_option("--logLevel", dest="logLevel", default=logging.INFO,
+        help="Level of the logging facility")
 
     #
     # parse the input arguments
     # 
     opts, args = parser.parse_args()
     if not opts.inputFile: parser.error("Missing input file to translate")
+    
+    #
+    # set up the logging facility
+    #
+    logging.basicConfig(level = int(opts.logLevel))
 
     #
     # Start the translation

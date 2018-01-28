@@ -69,67 +69,88 @@ class CodeGen(object):
                 "M=-M"])
 
     def vm_eq(self):
-        return \
-                """(EQ_TRUE_{index})
-@RETURN_ADDRESS_{index}
-M=1;JMP
-(EQ_FALSE_index{})
-@RETURN_ADDRESS_{index}
-M=0;JMP
-@SP
+        gened = """@SP
 AM=M-1
 D=M
 A=A-1
 D=M-D
+
 @EQ_TRUE_{index}
 D;JEQ
 @EQ_FALSE_{index}
 D;JNE
+
+(EQ_TRUE_{index})
+@RETURN_ADDRESS_{index}
+D=-1;JMP
+(EQ_FALSE_{index})
+@RETURN_ADDRESS_{index}
+D=0;JMP
+
 (RETURN_ADDRESS_{index})
+@SP
+A=M-1
+M=D
 """.format(index=self.cmdindex)
+        self.cmdindex = self.cmdindex + 1 
+        return gened
 
     def vm_gt(self):
-        return \
-                """(GT_TRUE_{index})
-@RETURN_ADDRESS_{index}
-M=1;JMP
-(GT_FALSE_index{})
-@RETURN_ADDRESS_{index}
-M=0;JMP                
-@SP
+        gened = """@SP
 AM=M-1
 D=M
 A=A-1
 D=M-D
+
 @GT_TRUE_{index}
 D;JGT
 @GT_FALSE_{index}
 D;JLE
+
+(GT_TRUE_{index})
+@RETURN_ADDRESS_{index}
+D=-1;JMP
+(GT_FALSE_{index})
+@RETURN_ADDRESS_{index}
+D=0;JMP                
+
 (RETURN_ADDRESS_{index})
+@SP
+A=M-1
+M=D
 """.format(index=self.cmdindex)
+        self.cmdindex = self.cmdindex + 1
+        return gened
 
     def vm_lt(self):
-        return \
-                """(LT_TRUE_{index})
-@RETURN_ADDRESS_{index}
-M=1;JMP
-(LT_FALSE_index{})
-@RETURN_ADDRESS_{index}
-M=0;JMP                
-@SP
+        gened = """@SP
 AM=M-1
 D=M
 A=A-1
 D=M-D
+
 @LT_TRUE_{index}
 D;JLT
 @LT_FALSE_{index}
 D;JGE
+
+(LT_TRUE_{index})
+@RETURN_ADDRESS_{index}
+D=-1;JMP
+(LT_FALSE_{index})
+@RETURN_ADDRESS_{index}
+D=0;JMP                
+
 (RETURN_ADDRESS_{index})
+@SP
+A=M-1
+M=D
 """.format(index = self.cmdindex)
+        self.cmdindex = self.cmdindex + 1
+        return gened
 
     def vm_and(self):
-        return tempalte % "D&M"
+        return template % "D&M"
 
     def vm_or(self):
         return template % "D|M"
@@ -149,6 +170,8 @@ M=!M
         else:
             raise NotImplementedError("unknown memory access command (%d, %s, %d)" % 
                     (memcmd, segment, address))
+
+        self.outputStream.write("%s\n" % asm)
 
     def vm_push(self, segment, address):
         # less instructions for the constant memory segment
@@ -184,7 +207,7 @@ A=M
 M=D
 @SP
 M=M+1
-""".format(filename=self.outputFile.rstrip(".asm"),
+""".format(filename=self.outputFile.rstrip(".asm").split("/")[-1],
                                index = address)
         elif segment == "temp":
             return \
@@ -251,7 +274,7 @@ AM=M-1
 D=M
 @{filename}.{index}
 M=D
-""".format(filename = self.outputFile.rstrip(".asm"), 
+""".format(filename = self.outputFile.rstrip(".asm").split("/")[-1], 
                                index = address)
         elif segment == "temp":
             return \
@@ -285,8 +308,7 @@ D=M
 M=D
 """.format(that = defs.THAT)
             else:
-                raise NotImplementedError("unknown address for the pointer memory segement %d" %
-                        address)
+                raise NotImplementedError("unknown address for the pointer memory segement %s" % str(address))
         else:
             raise NotImplementedError("unknown memory segment: (%s, %d)" % (
                 segment, address))
