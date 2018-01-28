@@ -3,7 +3,8 @@
 all: VMTranslator
 
 VMTranslator:
-	echo "#!/bin/bash\n\npython VMTranslator.py --inputFile="\$$"1\n\n" >> VMTranslator
+	echo "#!/bin/bash" >> VMTranslator
+	echo "python VMTranslator.py --inputFile="\$$"1" >> VMTranslator
 	chmod 755 VMTranslator
 
 clean:
