@@ -126,7 +126,7 @@ class CodeGen(object):
         # less instructions for the constant memory segment
         if segment == "constant":
             return \
-                    """A={value}
+                    """@{value}
                     D=A
                     @SP
                     A=M
@@ -136,7 +136,7 @@ class CodeGen(object):
                     """.format(value = address)
         elif segment in ["local", "argument", "this", "that"]:
             return \
-                    """A={value}
+                    """@{value}
                     D=A
                     @{segment}
                     A=M+D
@@ -160,7 +160,8 @@ class CodeGen(object):
                                index = address)
         elif segment == "temp":
             return \
-                    """D={index}
+                    """@{index}
+                    D=A
                     @{temp}
                     A=D+A
                     D=M
@@ -195,8 +196,69 @@ class CodeGen(object):
                 raise NotImplementedError("unknown address for the pointer memory segment %d" %
                         address)
         else:
-            raise NotImpelementedError("unknown memory segement: (%s, %d)" % (
+            raise NotImplementedError("unknown memory segement: (%s, %d)" % (
                 segment, address))
 
     def vm_pop(self, segment, address):
-        pass
+        if segment == "constant":
+            raise NotImplementedError("can not do pop into constant memory segment")
+        elif segment in ["local", "argument", "this", "that"]:
+            return \
+                    """@{index}
+                    D=A
+                    @{segment}
+                    A=M+D
+                    D=A
+                    @SP
+                    AM=M-1
+                    D=D+M
+                    A=D-M
+                    D=D-A
+                    M=D
+                    """.format(index = address, segment = defs.segment2id[segment])
+        elif segment == "static":
+            return \
+                    """@SP
+                    AM=M-1
+                    D=M
+                    @{filename}.{index}
+                    M=D
+                    """.format(filename = self.outputFile.rstrip(".asm"), 
+                               index = address)
+        elif segment == "temp":
+            return \
+                    """@{index}
+                    D=A
+                    @{temp}
+                    A=A+D
+                    D=A
+                    @SP
+                    AM=M-1
+                    D=D+M
+                    A=D-M
+                    D=D-A
+                    M=D
+                    """.format(index = address, temp=defs.TEMP)
+        elif segment == "pointer":
+            if address == 0:
+                return \
+                        """@SP
+                        AM=M-1
+                        D=M
+                        @{this}
+                        M=D
+                        """.format(this = defs.THIS)
+            elif address == 1:
+                return \
+                        """@SP
+                        AM=M-1
+                        D=M
+                        @{that}
+                        M=D
+                        """.format(that = defs.THAT)
+            else:
+                raise NotImplementedError("unknown address for the pointer memory segement %d" %
+                        address)
+        else:
+            raise NotImplementedError("unknown memory segment: (%s, %d)" % (
+                segment, address))
