@@ -21,7 +21,7 @@ class CodeGen(object):
         self.currentInputFile = ""
 
     def __enter__(self):
-        self.outputStream = open(self.outputFile, "w")
+        self.outputStream = open(self.outputPath, "w")
         self.cmdindex = 0
         return self
 
@@ -47,13 +47,27 @@ class CodeGen(object):
         self.outputStream.write("\n// %s\n" % self.inputLine)
 
     def generateLabel(self, label):
-        pass
+        self.outputStream.write("(%s)\n" % label)
 
     def generateGoTo(self, label):
-        pass
+        cmd = """@({label})
+JMP
+""".format(label = label)
+        self.outputStream.write(cmd)
 
     def generateIF(self, label):
-        pass
+        cmd = """@({label})
+@SP
+A=M-1 // M = RAM[SP-1]
+D=M // store the stack's top in D-register
+
+@SP
+M=M-1 // sp--
+
+@{label}
+D;JNE
+""".format(label = label)
+        self.outputStream.write(cmd)
 
     def generateFunction(self, fname, nlocal):
         pass

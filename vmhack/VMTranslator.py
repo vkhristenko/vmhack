@@ -15,7 +15,11 @@ def isdir(path):
     return os.path.isdir(path)
 
 def basename(path):
-    return os.path.basename(path[:-1]) if path[-1] == "/" else os.path.basename(path)
+    logging.debug("path = %s" % path)
+    if path[-1] == "/":
+        return os.path.basename(path[:-1]) 
+    else:
+        return os.path.basename(path)
 
 def dirname(path):
     pass
@@ -24,7 +28,7 @@ def translate(inputPath):
     """
     Main Driver: translate the Hack VM code into the Hack Assembly Instructions
     """
-    logging.info("Compiling hack vm file: %s" % inputPath)
+    logging.info("Compiling hack vm path: %s" % inputPath)
     with Parser(inputPath) as p:
         # build the output path
         if isdir(inputPath):
