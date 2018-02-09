@@ -34,14 +34,14 @@ segment2id = {"constant" : None, "local" : LCL, "argument" : ARG,
 #
 # Regular Expressions to specify the Hack VM Language
 #
-RE_INLINECOMMENT = " *//.*"
+RE_INLINECOMMENT = "[ \t]*//.*"
 RE_LINECOMMENT = "^" + RE_INLINECOMMENT + "$"
 RE_EMPTYLINE = "^$"
-RE_PUSHORPOP = "^(push|pop) +(constant|local|argument|static|this|that|pointer|temp) +([0-9]+)( *| %s)$" % RE_INLINECOMMENT
-RE_ARITHMETIC = "^(add|sub|neg|eq|gt|lt|and|or|not)( *| %s)$" % RE_INLINECOMMENT
-RE_LABEL = "^(label) +([a-zA-Z_.:][a-zA-Z_0-9$_:.]*)( *| %s)$" % RE_INLINECOMMENT
-RE_GOTO = "^(goto) +([a-zA-Z][a-zA-Z_0-9$.]*)( *| %s)$"% RE_INLINECOMMENT
-RE_IF = "^(if-goto) +([a-zA-Z][a-zA-Z_0-9$.]*)( *| %s)$" % RE_INLINECOMMENT
-RE_FUNCTION = "^(function) +([a-zA-Z][a-zA-Z_0-9$.]*) +([0-9]+)( *| %s)$" % RE_INLINECOMMENT
-RE_CALL = "^(call) +([a-zA-Z][a-zA-Z_0-9$.]*) +([0-9]+)( *| %s)$" % RE_INLINECOMMENT
-RE_RETURN = "^(return)( *| %s)$" % RE_INLINECOMMENT
+RE_PUSHORPOP = "^(push|pop) +(constant|local|argument|static|this|that|pointer|temp) +([0-9]+)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT
+RE_ARITHMETIC = "^(add|sub|neg|eq|gt|lt|and|or|not)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT
+RE_LABEL = "^(label) +([a-zA-Z_.:][a-zA-Z_0-9$_:.]*)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT
+RE_GOTO = "^(goto) +([a-zA-Z][a-zA-Z_0-9$.]*)([ \t]*|[ \t]%s)$"% RE_INLINECOMMENT
+RE_IF = "^(if-goto) +([a-zA-Z][a-zA-Z_0-9$.]*)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT
+RE_FUNCTION = "^(function) +([a-zA-Z][a-zA-Z_0-9$.]*) +([0-9]+)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT
+RE_CALL = "^(call) +([a-zA-Z][a-zA-Z_0-9$.]*) +([0-9]+)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT
+RE_RETURN = "^(return)([ \t]*|[ \t]%s)$" % RE_INLINECOMMENT

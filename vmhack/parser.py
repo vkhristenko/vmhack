@@ -3,6 +3,8 @@ Parser module
 """
 import logging, re
 import defs
+import os, sys
+import glob
 
 class Parser(object):
     """
@@ -10,15 +12,25 @@ class Parser(object):
     - reads a vm cmd, parses the cmd into its lexical components, and provides convenient
         access to these components
     """
-    def __init__(self, inputFile):
-        self.inputFile = inputFile
+    def __init__(self, inputPath):
+        self.inputPath = inputPath
+        if os.path.isdir(self.inputPath):
+            files = glob.glob(os.path.join(self.inputPath), "*.vm")
+            self.currentInputFile = files[0]
+            self.files = files[1:]
+        else:
+            self.currentInputFile = inputPath
+            self.files = []
 
     def __enter__(self):
-        self.inputStream = open(self.inputFile, "r")
+        self.inputStream = open(self.currentInputFile, "r")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.inputStream.close()
+
+    def inputFile(self):
+        return self.currentInputFile
 
     def hasMoreCommands(self):
         """
@@ -27,7 +39,20 @@ class Parser(object):
         logging.debug("hasMoreCommands start")
         while True:
             line = self.inputStream.readline()
-            if line == "": return False
+            if line == "":
+                # should check if we have more files to parse in the queue
+                if len(self.files) == 0:
+                    return False
+                else:
+                    # close the current input stream
+                    self.inputStream.close()
+                    # move to the next file to parse
+                    self.currentInputFile = self.files[0]
+                    # pop the queue
+                    self.files = self.files[1:]
+                    # open a new inpt stream
+                    self.inputStream = open(self.curentInputFile, "r")
+                    continue
 
             # to simplify things a bit -> right strip the line content
             line = line.rstrip()

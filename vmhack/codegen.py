@@ -33,7 +33,7 @@ class CodeGen(object):
             pass
         else:
             self.currentInputFile = fileName
-            self.triggerNewFile()
+            self._triggerNewFile()
     
     def _triggerNewFile(self):
         self.outputStream.write("\n// starting to parse a new input file: %s\n" % 
@@ -50,14 +50,13 @@ class CodeGen(object):
         self.outputStream.write("(%s)\n" % label)
 
     def generateGoTo(self, label):
-        cmd = """@({label})
-JMP
+        cmd = """@{label}
+0;JMP
 """.format(label = label)
         self.outputStream.write(cmd)
 
     def generateIF(self, label):
-        cmd = """@({label})
-@SP
+        cmd = """@SP
 A=M-1 // M = RAM[SP-1]
 D=M // store the stack's top in D-register
 
@@ -106,7 +105,7 @@ D;JNE
         self.outputStream.write("%s\n" % asm)
 
     def vm_add(self):
-        return template % "M+D"
+        return template % "D+M"
 
     def vm_sub(self):
         return template % "M-D"
@@ -239,7 +238,7 @@ M=M+1
                     """@{value}
 D=A
 @{segment}
-A=M+D
+A=D+M
 D=M
 @SP
 A=M
@@ -307,7 +306,7 @@ M=M+1
                     """@{index}
 D=A
 @{segment}
-A=M+D
+A=D+M
 D=A
 @SP
 AM=M-1

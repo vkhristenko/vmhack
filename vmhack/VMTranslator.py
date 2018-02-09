@@ -47,7 +47,7 @@ def translate(inputPath):
                 cType = p.commandType()
                 cg.inputLine = p.inputLine # ...
                 # inform the code gen that we changed the input file
-                if p.newInputFile(): cg.setFileName(p.inputFile())
+                cg.setFileName(p.inputFile())
                 # generate a line that contains the cmd that is going to be translated
                 cg.genCommentLine()
                 if cType == defs.C_ARITHMETIC:
