@@ -50,6 +50,18 @@ def translate(inputPath):
                     cg.generateArithmetic(p.arg1())
                 elif cType == defs.C_PUSH or cType == defs.C_POP:
                     cg.generatePushPop(cType, p.arg1(), int(p.arg2()))
+                elif cType == defs.C_LABEL:
+                    cg.generateLabel(p.arg1())
+                elif cType == defs.C_GOTO:
+                    cg.generateGoTo(p.arg1())
+                elif cType == defs.C_IF:
+                    cg.generateIF(p.arg1())
+                elif cType == defs.C_FUNCTION:
+                    cg.generateFunction(p.arg1(), int(p.arg2()))
+                elif cType == defs.C_CALL:
+                    cg.generateCall(p.arg1(), int(p.arg2()))
+                elif cType == defs.C_RETURN:
+                    cg.generateReturn()
                 else:
                     raise NotImplementedError("Unsupported command type: %d" % cType)
 

@@ -39,8 +39,30 @@ class CodeGen(object):
         self.outputStream.write("\n// starting to parse a new input file: %s\n" % 
                                 self.currentInputFile)
 
+    def generateInit(self):
+        self.outputStream.write("\n// bootstrap code\n")
+        self.outputStream.write("")
+
     def genCommentLine(self):
         self.outputStream.write("\n// %s\n" % self.inputLine)
+
+    def generateLabel(self, label):
+        pass
+
+    def generateGoTo(self, label):
+        pass
+
+    def generateIF(self, label):
+        pass
+
+    def generateFunction(self, fname, nlocal):
+        pass
+
+    def generateCall(self, fname, nargs):
+        pass
+
+    def generateReturn(self):
+        pass
 
     def generateArithmetic(self, acmd):
         if acmd == "add":

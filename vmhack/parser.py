@@ -55,6 +55,12 @@ class Parser(object):
         # match to determine the type of the command
         m_pushpop = re.match(defs.RE_PUSHORPOP, self.inputLine)
         m_arithmetic = re.match(defs.RE_ARITHMETIC, self.inputLine)
+        m_label = re.match(defs.RE_LABEL, self.inputLine)
+        m_goto = re.match(defs.RE_GOTO, self.inputLine)
+        m_if = re.match(defs.RE_IF, self.inputLine)
+        m_function = re.match(defs.RE_FUNCTION, self.inputLine)
+        m_call = re.match(defs.RE_CALL, self.inputLine)
+        m_return = re.match(defs.RE_RETURN, self.inputLine)
 
         if m_pushpop is not None:
             self.action = m_pushpop.group(1)
@@ -70,6 +76,25 @@ class Parser(object):
         elif m_arithmetic is not None:
             self.action = m_arithmetic.group(1)
             self.ctype = defs.C_ARITHMETIC
+        elif m_label is not None:
+            self.ctype = defs.C_LABEL
+            self.label = m_label.group(2)
+        elif m_goto is not None:
+            self.ctype = defs.C_GOTO
+            self.label = m_goto.group(2)
+        elif m_if is not None:
+            self.ctype = defs.C_IF
+            self.label = m_if.group(2)
+        elif m_function is not None:
+            self.ctype = defs.C_FUNCTION
+            self.fname = m_function.group(2)
+            self.nlocal = m_function.group(3)
+        elif m_call is not None:
+            self.ctype = defs.C_CALL
+            self.fname = m_call.group(2)
+            self.nargs = m_call.group(2)
+        elif m_return is not None:
+            self.ctype = defs.C_RETURN
         else:
             raise NotImplementedError("Unsupported VM command type: %s" % self.inputLine)
 
@@ -81,6 +106,13 @@ class Parser(object):
             return self.segment
         elif self.ctype == defs.C_ARITHMETIC:
             return self.action
+        elif (self.ctype == defs.C_LABEL or self.ctype == defs.C_GOTO or
+              self.ctype == defs.C_IF):
+            return self.label
+        elif self.ctype == defs.C_FUNCTION or self.ctype == defs.C_CALL:
+            return self.fname
+        elif self.ctype == defs.C_RETURN:
+            raise NotImplementedError("Parser::arg1 should not be called for C_RETURN command")
         else:
             raise NotImplementedError("Parser::arg1 unknown ctype: " + str(self.ctype))
 
@@ -88,5 +120,9 @@ class Parser(object):
     def arg2(self):
         if self.ctype == defs.C_PUSH or self.ctype == defs.C_POP:
             return self.value
+        elif self.ctype == defs.C_FUNCTION:
+            return self.nlocal
+        elif self.ctype == defs.C_CALL:
+            return self.nargs
         else:
             raise NotImplementedError("Parser::arg2 unknown ctype:" + str(self.ctype))
