@@ -8,14 +8,32 @@ from codegen import CodeGen
 import defs
 import logging
 
-def translate(inputFile):
+def isdir(path):
+    """
+    return true if the provided path is a directory, otherwise false on a file
+    """
+    return os.path.isdir(path)
+
+def basename(path):
+    return os.path.basename(path[:-1]) if path[-1] == "/" else os.path.basename(path)
+
+def dirname(path):
+    pass
+
+def translate(inputPath):
     """
     Main Driver: translate the Hack VM code into the Hack Assembly Instructions
     """
-    logging.info("Compiling hack vm file: %s" % inputFile)
-    with Parser(inputFile) as p:
-        outputFile = inputFile.replace(".vm", ".asm")
-        with CodeGen(outputFile) as cg:
+    logging.info("Compiling hack vm file: %s" % inputPath)
+    with Parser(inputPath) as p:
+        # build the output path
+        if isdir(inputPath):
+            outputPath = os.path.join(inputPath, basename(inputPath) + ".asm")
+            shouldGenBootstrap = True
+        else:
+            outputPath = inputPath.replace(".vm", ".asm")
+            shouldGenBootstrap = False
+        with CodeGen(outputPath, shouldGenBootstrap) as cg:
             while p.hasMoreCommands():
                 # fetch the command
                 p.advance()
@@ -24,6 +42,8 @@ def translate(inputFile):
                 # dispatch depending on the comamnd that we are dealing with
                 cType = p.commandType()
                 cg.inputLine = p.inputLine # ...
+                # inform the code gen that we changed the input file
+                if p.newInputFile(): cg.setFileName(p.inputFile())
                 # generate a line that contains the cmd that is going to be translated
                 cg.genCommentLine()
                 if cType == defs.C_ARITHMETIC:
@@ -33,7 +53,7 @@ def translate(inputFile):
                 else:
                     raise NotImplementedError("Unsupported command type: %d" % cType)
 
-    logging.info("Finished compiling hack file: %s" % inputFile)
+    logging.info("Finished compiling hack inputPath: %s" % inputPath)
 
 if __name__ == "__main__":
     #
@@ -41,7 +61,7 @@ if __name__ == "__main__":
     # 
     from optparse import OptionParser
     parser = OptionParser()
-    parser.add_option("--inputFile", dest="inputFile", default=None,
+    parser.add_option("--inputPath", dest="inputPath", default=None,
         help="File to translate")
     parser.add_option("--logLevel", dest="logLevel", default=logging.INFO,
         help="Level of the logging facility")
@@ -50,7 +70,7 @@ if __name__ == "__main__":
     # parse the input arguments
     # 
     opts, args = parser.parse_args()
-    if not opts.inputFile: parser.error("Missing input file to translate")
+    if not opts.inputPath: parser.error("Missing input file to translate")
     
     #
     # set up the logging facility
@@ -60,4 +80,4 @@ if __name__ == "__main__":
     #
     # Start the translation
     #
-    translate(inputFile=opts.inputFile)
+    translate(inputPath=opts.inputPath)

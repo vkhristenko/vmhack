@@ -15,8 +15,10 @@ template = "\n".join([
         "M=%s"])
 
 class CodeGen(object):
-    def __init__(self, outputFile):
-        self.outputFile = outputFile
+    def __init__(self, outputPath, shouldGenBootstrap):
+        self.outputPath = outputPath
+        self.shouldBootstrap = shouldGenBootstrap
+        self.currentInputFile = ""
 
     def __enter__(self):
         self.outputStream = open(self.outputFile, "w")
@@ -25,6 +27,17 @@ class CodeGen(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.outputStream.close()
+
+    def setFileName(self, fileName):
+        if fileName == self.currentInputFile:
+            pass
+        else:
+            self.currentInputFile = fileName
+            self.triggerNewFile()
+    
+    def _triggerNewFile(self):
+        self.outputStream.write("\n// starting to parse a new input file: %s\n" % 
+                                self.currentInputFile)
 
     def genCommentLine(self):
         self.outputStream.write("\n// %s\n" % self.inputLine)
