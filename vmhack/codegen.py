@@ -23,6 +23,8 @@ class CodeGen(object):
     def __enter__(self):
         self.outputStream = open(self.outputPath, "w")
         self.cmdindex = 0
+        self.currentFunctionName = ""
+        self.currentFunctionCalls = 0
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -41,13 +43,14 @@ class CodeGen(object):
 
     def generateInit(self):
         self.outputStream.write("\n// bootstrap code\n")
-        self.outputStream.write("")
+        self.outputStream.write("\n")
 
     def genCommentLine(self):
         self.outputStream.write("\n// %s\n" % self.inputLine)
 
     def generateLabel(self, label):
-        self.outputStream.write("(%s)\n" % label)
+        self.outputStream.write("(%s.%s$%s)\n" % (self.currentInputFile,
+            self.currentFunctionName, label))
 
     def generateGoTo(self, label):
         cmd = """@{label}
@@ -69,13 +72,130 @@ D;JNE
         self.outputStream.write(cmd)
 
     def generateFunction(self, fname, nlocal):
-        pass
+        self.currentFunctionName = fname 
+        self.currentFunctionCalls = 0
+        cmd = """
+({fileName}.{funcName})
+""".format(funcName=fname, fileName = self.currentInputFile)
+        self.outputStream.write(cmd)
+        # intialize local memory segement
+        for i in range(nlocal):
+            self.generatePushPop(defs.C_PUSH, "constant", 0)
 
     def generateCall(self, fname, nargs):
-        pass
+        # generate the return label 
+        returnAddressLabel = "{fileName}.{funcName}$ret.{index}".format(
+            fileName = self.currentFileName,
+            funcName = self.currentFunctionName,
+            index = self.currentFunctionCall)
+        self.currentFunctionCall = self.currentFunctionCall + 1
+
+        # push the return address to the stack
+        self.generatePushPop(defs.C_PUSH, "constant", returnAddressLabel)
+
+        # save the caller's frame!
+        # LCL, ARG, THIS, THAT addresses of memory segments to reset them back to 
+        def _quickGenCMD(reg):
+            return """@{value}
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+""".format(value = reg)
+        self.outputStream.write(_quickGenCMD("LCL"))
+        self.outputStream.write(_quickGenCMD("ARG"))
+        self.outputStream.write(_quickGenCMD("THIS"))
+        self.outputStream.write(_quickGenCMD("THAT"))
+
+        # reposition ARG and LCL
+        cmd = """// ARG = SP - 5 - nARGs
+@{nArgs}
+D=A
+@5
+D=D+A
+@SP
+D=M-D
+@ARG
+M=D
+
+// LCL = SP
+@SP
+D=M
+@LCL
+M=D
+""".format(nArgs = nargs)
+        self.oututStream.write(cmd)
+
+        # goto the function that is called
+        self.generateGoTo(fname)
+
+        # need to declare a label for the called function to return to
+        self.outputStream.write("({returnAddress})\n".format(
+            returnAddress=returnAddressLabel))
 
     def generateReturn(self):
-        pass
+        cmd = """@LCL
+D=M
+@{TMP0}
+M=D // endFrame = LCL
+
+@5
+D=A
+@{TMP0}
+D=M-D
+A=D // *(endFrame - 5)
+D=M // D = returnAddress
+@{TMP1}
+M=D
+
+// pop the top value on the stack into *arg
+""".format(TMP0=defs.segment2id["temp"], TMP1=(defs.segment2id["temp"]+1))
+        self.outputStream.write(cmd)
+        self.generatePushPop(defs.C_POP, "argument", 0)
+        cmd = """// SP = ARG+1
+@ARG
+D=M+1
+@SP
+M=D
+
+// THAT = *(endFrame - 1)
+@{TMP0}
+A=M-1
+D=M
+@THAT
+M=D
+
+// THIS = *(endFrame - 2)
+@2
+D=A
+@{TMP0}
+A=M-D
+@THIS
+M=D
+
+// ARG = *(endFrame - 3)
+@3
+D=A
+@{TMP0}
+A=M-D
+@ARG
+M=D
+
+// LCL = *(endFrame - 4)
+@4
+D=A
+@{TMP0}
+A=M-D
+@LCL
+M=D
+
+// goto returnAddress
+@{TMP1}
+0;JMP
+""".format(TMP0=defs.segment2id["temp"], TMP1=(defs.segment2id["temp"]+1))
+        self.outputStream.write(cmd)
 
     def generateArithmetic(self, acmd):
         if acmd == "add":
