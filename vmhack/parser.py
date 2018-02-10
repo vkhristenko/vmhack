@@ -15,7 +15,7 @@ class Parser(object):
     def __init__(self, inputPath):
         self.inputPath = inputPath
         if os.path.isdir(self.inputPath):
-            files = glob.glob(os.path.join(self.inputPath), "*.vm")
+            files = glob.glob(os.path.join(self.inputPath, "*.vm"))
             self.currentInputFile = files[0]
             self.files = files[1:]
         else:
@@ -51,7 +51,7 @@ class Parser(object):
                     # pop the queue
                     self.files = self.files[1:]
                     # open a new inpt stream
-                    self.inputStream = open(self.curentInputFile, "r")
+                    self.inputStream = open(self.currentInputFile, "r")
                     continue
 
             # to simplify things a bit -> right strip the line content
@@ -117,7 +117,7 @@ class Parser(object):
         elif m_call is not None:
             self.ctype = defs.C_CALL
             self.fname = m_call.group(2)
-            self.nargs = m_call.group(2)
+            self.nargs = m_call.group(3)
         elif m_return is not None:
             self.ctype = defs.C_RETURN
         else:

@@ -3,6 +3,7 @@ Code Generation Module
 """
 
 import defs
+import os
 
 #
 # Template for the majoarity of arithmetic commands
@@ -23,8 +24,11 @@ class CodeGen(object):
     def __enter__(self):
         self.outputStream = open(self.outputPath, "w")
         self.cmdindex = 0
-        self.currentFunctionName = ""
+        self.currentFunctionName = "bootstrap"
         self.currentFunctionCalls = 0
+        # bootstrap if necessary
+        if self.shouldBootstrap:
+            self.generateInit()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -43,19 +47,26 @@ class CodeGen(object):
 
     def generateInit(self):
         self.outputStream.write("\n// bootstrap code\n")
-        self.outputStream.write("\n")
+        cmd = """@256
+D=A
+@SP
+M=D
+"""
+        self.outputStream.write(cmd)
+        self.generateCall("Sys.init", 0)
 
     def genCommentLine(self):
         self.outputStream.write("\n// %s\n" % self.inputLine)
 
     def generateLabel(self, label):
-        self.outputStream.write("(%s.%s$%s)\n" % (self.currentInputFile,
+        self.outputStream.write("(%s$%s)\n" % (
             self.currentFunctionName, label))
 
     def generateGoTo(self, label):
-        cmd = """@{label}
+        cmd = """@{funcName}${label}
 0;JMP
-""".format(label = label)
+""".format(funcName = self.currentFunctionName,
+           label = label)
         self.outputStream.write(cmd)
 
     def generateIF(self, label):
@@ -66,29 +77,30 @@ D=M // store the stack's top in D-register
 @SP
 M=M-1 // sp--
 
-@{label}
+@{funcName}${label}
 D;JNE
-""".format(label = label)
+""".format(funcName=self.currentFunctionName,
+           label=label)
         self.outputStream.write(cmd)
 
     def generateFunction(self, fname, nlocal):
         self.currentFunctionName = fname 
         self.currentFunctionCalls = 0
         cmd = """
-({fileName}.{funcName})
-""".format(funcName=fname, fileName = self.currentInputFile)
+({funcName})
+""".format(funcName=fname)
         self.outputStream.write(cmd)
         # intialize local memory segement
         for i in range(nlocal):
+            # push to the stack value 0
             self.generatePushPop(defs.C_PUSH, "constant", 0)
 
     def generateCall(self, fname, nargs):
         # generate the return label 
-        returnAddressLabel = "{fileName}.{funcName}$ret.{index}".format(
-            fileName = self.currentFileName,
+        returnAddressLabel = "{funcName}$ret.{index}".format(
             funcName = self.currentFunctionName,
-            index = self.currentFunctionCall)
-        self.currentFunctionCall = self.currentFunctionCall + 1
+            index = self.currentFunctionCalls)
+        self.currentFunctionCalls = self.currentFunctionCalls + 1
 
         # push the return address to the stack
         self.generatePushPop(defs.C_PUSH, "constant", returnAddressLabel)
@@ -125,11 +137,12 @@ M=D
 D=M
 @LCL
 M=D
-""".format(nArgs = nargs)
-        self.oututStream.write(cmd)
 
-        # goto the function that is called
-        self.generateGoTo(fname)
+// goto to the called function
+@{fname}
+0;JMP
+""".format(nArgs = nargs, fname=fname)
+        self.outputStream.write(cmd)
 
         # need to declare a label for the called function to return to
         self.outputStream.write("({returnAddress})\n".format(
@@ -144,14 +157,13 @@ M=D // endFrame = LCL
 @5
 D=A
 @{TMP0}
-D=M-D
-A=D // *(endFrame - 5)
+A=M-D
 D=M // D = returnAddress
 @{TMP1}
 M=D
 
 // pop the top value on the stack into *arg
-""".format(TMP0=defs.segment2id["temp"], TMP1=(defs.segment2id["temp"]+1))
+""".format(TMP0=defs.GPR, TMP1=(defs.GPR+1))
         self.outputStream.write(cmd)
         self.generatePushPop(defs.C_POP, "argument", 0)
         cmd = """// SP = ARG+1
@@ -172,6 +184,7 @@ M=D
 D=A
 @{TMP0}
 A=M-D
+D=M
 @THIS
 M=D
 
@@ -180,6 +193,7 @@ M=D
 D=A
 @{TMP0}
 A=M-D
+D=M
 @ARG
 M=D
 
@@ -188,13 +202,15 @@ M=D
 D=A
 @{TMP0}
 A=M-D
+D=M
 @LCL
 M=D
 
 // goto returnAddress
 @{TMP1}
+A=M
 0;JMP
-""".format(TMP0=defs.segment2id["temp"], TMP1=(defs.segment2id["temp"]+1))
+""".format(TMP0=defs.GPR, TMP1=(defs.GPR+1))
         self.outputStream.write(cmd)
 
     def generateArithmetic(self, acmd):
@@ -375,8 +391,9 @@ A=M
 M=D
 @SP
 M=M+1
-""".format(filename=self.outputFile.rstrip(".asm").split("/")[-1],
-                               index = address)
+""".format(filename=
+            os.path.split(self.currentInputFile)[-1].rstrip(".vm"),
+            index = address)
         elif segment == "temp":
             return \
                     """@{index}
@@ -442,8 +459,9 @@ AM=M-1
 D=M
 @{filename}.{index}
 M=D
-""".format(filename = self.outputFile.rstrip(".asm").split("/")[-1], 
-                               index = address)
+""".format(filename = 
+            os.path.split(self.currentInputFile)[-1].rstrip(".vm"), 
+            index = address)
         elif segment == "temp":
             return \
                     """@{index}
